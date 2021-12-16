@@ -12,7 +12,8 @@ void Logger::Log(const LogType& type, const std::string& header, const std::stri
 	localtime_s(&time, &t);
 
 	std::string times = std::to_string(time.tm_hour) + ":" + std::to_string(time.tm_min) + ":" + std::to_string(time.tm_sec);
-	std::string numbers = ((numbering1) ? "[" + std::to_string(numbering1) + "]" : "   ") + ((numbering2) ? "[" + std::to_string(numbering2) + "]" : "   ");
+	std::string numbers1 = ((numbering1 >= 0) ? std::to_string(numbering1) : "  ");
+	std::string numbers2 = ((numbering2 >= 0) ? std::to_string(numbering2) : "  ");
 
 
 	SetConsoleTextAttribute(Logger::m_consoleHandle, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
@@ -28,7 +29,8 @@ void Logger::Log(const LogType& type, const std::string& header, const std::stri
 	SetConsoleTextAttribute(Logger::m_consoleHandle, FOREGROUND_BLUE | FOREGROUND_GREEN);
 	std::cout << " |-";
 	SetConsoleTextAttribute(Logger::m_consoleHandle, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
-	std::cout << numbers;
+	std::cout << "[" << std::right << std::setw(2) << std::setfill(' ') << numbers1 << "]";
+	std::cout << "[" << std::right << std::setw(2) << std::setfill(' ') << numbers2 << "]";
 	SetConsoleTextAttribute(Logger::m_consoleHandle, FOREGROUND_BLUE | FOREGROUND_GREEN);
 	std::cout << "-| -> ";
 	SetConsoleTextAttribute(Logger::m_consoleHandle, FOREGROUND_RED | FOREGROUND_GREEN);

@@ -12,6 +12,8 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+uniform mat4 camera;
+
 out vec2 TexCoord;
 out vec3 Normal;
 out vec3 ObjectPosition;

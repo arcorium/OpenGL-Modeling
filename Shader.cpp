@@ -151,6 +151,11 @@ unsigned Shader::GetId() const
 	return m_ID;
 }
 
+unsigned Shader::GetFalseUniform()
+{
+	return m_false.size();
+}
+
 std::string Shader::ReadFile(const std::string& filePath)
 {
 	std::string result;
@@ -208,6 +213,7 @@ bool Shader::ProcessCache(const std::string& name)
 
 		if (location == -1)
 		{
+			m_false.insert(name);
 			return false;
 		}
 		Logger::Log(LogType::SUCCESS, m_name, "Register new variable : " + name, location);

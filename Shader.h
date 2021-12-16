@@ -6,6 +6,7 @@ class Shader
 	unsigned int m_ID;
 	std::string m_name;
 	std::unordered_map<std::string, int> m_cache;
+	inline static std::set<std::string> m_false;
 
 public:
 	/**
@@ -40,6 +41,8 @@ public:
 	 * \return program shader ID
 	 */
 	unsigned int GetId() const;
+
+	static unsigned GetFalseUniform();
 
 private:
 	/**

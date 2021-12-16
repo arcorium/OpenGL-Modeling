@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "Camera.h"
-#include "Logger.h"
 #include "Mesh.h"
 #include "Model.h"
 
@@ -18,7 +17,7 @@ bool isFirst = true, isLine = false;
 float lastX, lastY;
 Camera cam{glm::vec3{0.0f, 0.0f, 0.0f}};
 float deltaTime = 0.0f;
-glm::vec3 lightPosition = glm::vec3{ 0.0f };
+glm::vec3 lightPosition = glm::vec3{ 0.0f, 0.0f, -9.0f };
 
 int main()
 {
@@ -139,7 +138,7 @@ int main()
 	glm::mat4 projection = glm::perspective(glm::radians(cam.GetZoom()), 1024.0f / 768.0f, 0.1f, 100.0f);
 
 	float lastTime = 0.0f;
-
+	float cumulativeTime = 0.0f;
 
 	glfwShowWindow(window);
 	while (!glfwWindowShouldClose(window))
@@ -148,6 +147,7 @@ int main()
 		const float currentTime = static_cast<float>(glfwGetTime());
 		deltaTime = currentTime - lastTime;
 		lastTime = currentTime;
+		cumulativeTime += deltaTime;
 		// Updating
 		view = cam.GetView();
 		projection = glm::perspective(glm::radians(cam.GetZoom()), 1024.0f / 768.0f, 0.1f, 100.0f);
@@ -174,17 +174,24 @@ int main()
 
 		shader.Use();
 
-		shader.SetUniform("model", model);
-		shader.SetUniform("view", view);
+		//shader.SetUniform("camera", cam.GetMatrix());
 		shader.SetUniform("projection", projection);
+		shader.SetUniform("view", view);
+		shader.SetUniform("model", model);
 
 		shader.SetUniform("material.shininess", 32.0f);
 
 		// Light
-		shader.SetUniform("light.direction", lightPosition);
-		shader.SetUniform("ambient", glm::vec3{0.5f, 0.5f, 0.5f});
-		shader.SetUniform("diffuse", glm::vec3{0.5f, 0.5f, 0.5f});
-		shader.SetUniform("specular", glm::vec3{1.0f, 1.0f, 1.0f});
+		shader.SetUniform("light.position", lightPosition);
+		shader.SetUniform("light.ambient", glm::vec3{0.1f, 0.1f, 0.1f});
+		shader.SetUniform("light.diffuse", glm::vec3{1.0f, 1.0f, 1.0f});
+		shader.SetUniform("light.specular", glm::vec3{1.0f, 1.0f, 1.0f});
+
+		// Attenuation
+		shader.SetUniform("light.constant", 1.0f);
+		shader.SetUniform("light.linear", 0.09f);
+		shader.SetUniform("light.quadratic", 0.032f);
+
 
 		shader.SetUniform("viewPosition", cam.GetPosition());
 
@@ -197,7 +204,7 @@ int main()
 		lightModel = glm::translate(lightModel, lightPosition);
 		lightModel = glm::scale(lightModel, glm::vec3{ 0.2f });
 
-		lightShader.SetUniform("Colour", lightColor);
+		lightShader.SetUniform("Color", lightColor);
 		lightShader.SetUniform("projection", projection);
 		lightShader.SetUniform("view", view);
 		lightShader.SetUniform("model", lightModel);
@@ -210,6 +217,12 @@ int main()
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+		if (cumulativeTime >= 1.0f)
+		{
+			cumulativeTime = 0.0f;
+			if (unsigned n = Shader::GetFalseUniform())
+				Logger::Log(LogType::FAILED, "UNIFORM", "There is " + std::to_string(n) + " false uniform");
+		}
 		glfwSwapBuffers(window);
 	}
 
@@ -300,7 +313,7 @@ void MouseCallback(GLFWwindow* win, double x, double y)
 	lastX = x;
 	lastY = y;
 
-	//cam.CursorInput(xOffset, yOffset);
+	cam.CursorInput(xOffset, yOffset);
 }
 
 void ScrollCallback(GLFWwindow* win, double xOffset, double yOffset)

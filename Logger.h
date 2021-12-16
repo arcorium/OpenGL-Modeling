@@ -17,7 +17,7 @@ private:
 	Logger();
 public:
 
-	static void Log(const LogType& type, const std::string& header, const std::string& str, const int numbering1 = 0, const int numbering2 = 0);
+	static void Log(const LogType& type, const std::string& header, const std::string& str, const int numbering1 = -1, const int numbering2 = -1);
 
 private:
 	static std::string GetType(LogType type);

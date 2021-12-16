@@ -10,6 +10,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 
 // OEPNGL
@@ -32,3 +33,9 @@
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
+
+// Static Local
+#include "Util.h"
+#include "Texture.h"
+#include "Vertex.h"
+#include "Logger.h"

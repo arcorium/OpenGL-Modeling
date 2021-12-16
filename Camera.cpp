@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Camera.h"
 
-Camera::Camera(glm::vec3 position)
-	:m_position(position), m_front(glm::vec3{0.0f, 0.0f, -1.0f}), m_right(), m_up(), m_worldUp(glm::vec3{0.0f, 1.0f, 0.0f}),
+Camera::Camera(glm::vec3 camPos, const glm::mat4& model, const glm::mat4& projection)
+	:m_model(model), m_projection(projection), m_position(camPos), m_front(glm::vec3{0.0f, 0.0f, -1.0f}), m_right(), m_up(), m_worldUp(glm::vec3{0.0f, 1.0f, 0.0f}),
 		m_sensitivity(SENSITIVITY), m_speed(SPEED), m_yaw(YAW), m_pitch(PITCH), m_zoom(ZOOM)
 {
 	Setup();
@@ -74,6 +74,26 @@ glm::vec3 Camera::GetFront()
 	return m_front;
 }
 
+glm::mat4 Camera::GetModel()
+{
+	return m_model;
+}
+
+glm::mat4 Camera::GetProjection()
+{
+	return m_projection;
+}
+
+void Camera::SetModel(const glm::mat4& model)
+{
+	m_model = model;
+}
+
+void Camera::SetProjection(const glm::mat4& proj)
+{
+	m_projection = proj;
+}
+
 glm::mat4 Camera::GetView()
 {
 	return glm::lookAt(m_position, m_front + m_position, m_up);
@@ -82,4 +102,9 @@ glm::mat4 Camera::GetView()
 const float& Camera::GetZoom() const
 {
 	return m_zoom;
+}
+
+glm::mat4 Camera::GetMatrix()
+{
+	return m_projection * GetView() * m_model;
 }

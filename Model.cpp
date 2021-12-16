@@ -10,7 +10,7 @@
 Model::Model(const std::string& path)
 	: m_meshes(), m_directory()
 {
-	stbi_set_flip_vertically_on_load(1);
+	//stbi_set_flip_vertically_on_load(1);
 	LoadModel(path);
 }
 
@@ -18,7 +18,7 @@ void Model::Draw(Shader& shader)
 {
 	for (uint32_t i = 0; i < m_meshes.size(); i++)
 	{
-		m_meshes[i].Draw(shader);
+		m_meshes[i] .Draw(shader);
 	}
 }
 
@@ -26,17 +26,19 @@ void Model::LoadModel(const std::string& path)
 {
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs);	// Flip UV because OpenGL is flipping in Y axis
+	const aiScene* scene = importer.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);	// Flip UV because OpenGL is flipping in Y axis
 
 	// Checking if importing is already done successfully
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		std::cout << "[ERROR - ASSIMP] -- " << importer.GetErrorString() << std::endl;
+		Logger::Log(LogType::FAILED, "ASSIMP", "Failed to Load Image");
 		return;
 	}
 
 	m_directory = path.substr(0, path.find_last_of('\\'));
 
+	// Check Material
+	Logger::Log(LogType::INFO, "MODEL", "This model has " + std::to_string(scene->mNumMaterials) + " materials");
 	// Get meshes from all node starting to root node
 	ProcessNode(scene->mRootNode, scene);
 }
@@ -72,10 +74,12 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		vertex.position.y = mesh->mVertices[i].y;
 		vertex.position.z = mesh->mVertices[i].z;
 
-
-		vertex.normal.x = mesh->mNormals[i].x;
-		vertex.normal.y = mesh->mNormals[i].y;
-		vertex.normal.z = mesh->mNormals[i].z;
+		if (mesh->HasNormals())
+		{
+			vertex.normal.x = mesh->mNormals[i].x;
+			vertex.normal.y = mesh->mNormals[i].y;
+			vertex.normal.z = mesh->mNormals[i].z;
+		}
 
 
 		if (mesh->HasTextureCoords(0))
@@ -89,18 +93,18 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			vertex.texCoord.y = 0.0f;
 		}
 
-		if (mesh->HasTangentsAndBitangents())
-		{
-			// Tangent
-			vertex.tangent.x = mesh->mTangents[i].x;
-			vertex.tangent.y = mesh->mTangents[i].y;
-			vertex.tangent.z = mesh->mTangents[i].z;
+		//if (mesh->HasTangentsAndBitangents())
+		//{
+		//	// Tangent
+		//	vertex.tangent.x = mesh->mTangents[i].x;
+		//	vertex.tangent.y = mesh->mTangents[i].y;
+		//	vertex.tangent.z = mesh->mTangents[i].z;
 
-			// Bitangent
-			vertex.bitangent.x = mesh->mBitangents[i].x;
-			vertex.bitangent.y = mesh->mBitangents[i].y;
-			vertex.bitangent.z = mesh->mBitangents[i].z;
-		}
+		//	// Bitangent
+		//	vertex.bitangent.x = mesh->mBitangents[i].x;
+		//	vertex.bitangent.y = mesh->mBitangents[i].y;
+		//	vertex.bitangent.z = mesh->mBitangents[i].z;
+		//}
 
 
 		// Add it to vector
@@ -111,12 +115,13 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	// Take every indices in every face
 	for(uint32_t i = 0; i < mesh->mNumFaces; i++)
 	{
-		aiFace face = mesh->mFaces[i];
+		aiFace& face = mesh->mFaces[i];
 
-		for (uint32_t j = 0; j < face.mNumIndices; j++)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
+		assert(face.mNumIndices == 3);
+
+		indices.push_back(face.mIndices[0]);
+		indices.push_back(face.mIndices[1]);
+		indices.push_back(face.mIndices[2]);
 	}
 
 	// Material (Texture)
@@ -127,30 +132,27 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		// Diffuse maps
 
 		std::vector<Texture> diffuseMaps = LoadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
-
-		Logger::Log(LogType::INFO, "DIFFUSE", std::to_string(diffuseMaps.size()));
 		// Insert to last index
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		// Specular maps
 
 		std::vector<Texture> specularMaps = LoadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
-
-		Logger::Log(LogType::INFO, "SPECULAR", std::to_string(diffuseMaps.size()));
-
 		// Insert to last index
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		// Normal maps
+		//// Normal maps
 
-		std::vector<Texture> normalMaps = LoadMaterialTexture(material, aiTextureType_NORMALS, "texture_normal");
+		//std::vector<Texture> normalMaps = LoadMaterialTexture(material, aiTextureType_NORMALS, "texture_normal");
 
-		Logger::Log(LogType::INFO, "NORMALS", std::to_string(diffuseMaps.size()));
-		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-		// Height maps
+		//if (!normalMaps.empty())
+		//	Logger::Log(LogType::INFO, "NORMALS", std::to_string(diffuseMaps.size()));
+		//textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+		//// Height maps
 
-		std::vector<Texture> heightMaps = LoadMaterialTexture(material, aiTextureType_HEIGHT, "texture_height");
+		//std::vector<Texture> heightMaps = LoadMaterialTexture(material, aiTextureType_HEIGHT, "texture_height");
 
-		Logger::Log(LogType::INFO, "HEIGHT", std::to_string(diffuseMaps.size()));
-		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+		//if (!normalMaps.empty())
+		//	Logger::Log(LogType::INFO, "HEIGHT", std::to_string(diffuseMaps.size()));
+		//textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	}
 
@@ -174,6 +176,7 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 		{
 			if (m_loadedTexture.contains(str.C_Str()))
 			{
+				textures.push_back(m_loadedTexture[str.C_Str()]);
 				skip = true;
 				break;
 			}
@@ -184,14 +187,10 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 			Texture texture;
 
 			// Checking if the image is properly loaded and assigned into texture
-			if (!TextureFromFile(str.C_Str(), m_directory, &texture.id))
-			{
-				m_loadedTexture.insert(std::make_pair(str.C_Str(), 0));
-				continue;
-			}
+			texture.id = TextureFromFile(str.C_Str(), m_directory);
 			texture.type = typeName;
 			texture.path = str.C_Str();
-			m_loadedTexture.insert(std::make_pair(texture.path, 1));
+			m_loadedTexture.insert(std::make_pair(texture.path, texture));
 			textures.push_back(texture);
 		}
 
@@ -200,9 +199,8 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 	return textures;
 }
 
-bool TextureFromFile(const char* path, const std::string& directory, unsigned int* id, bool gamma)
+unsigned TextureFromFile(const char* path, const std::string& directory, bool gamma)
 {
-	bool isSuccess = false;
 	std::string fullpath = std::string(directory + "\\" + path);
 
 	int width, height, nChannel;
@@ -210,14 +208,13 @@ bool TextureFromFile(const char* path, const std::string& directory, unsigned in
 	if (!data)
 	{
 		Logger::Log(LogType::FAILED, "Texture", "Load Image " + fullpath);
-		*id = 0;
-		return false;
+		exit(-1);
 	}
 
 	unsigned int texture;
 	glGenTextures(1, &texture);
 
-	GLenum format;
+	GLenum format = GL_RGB;
 	if (nChannel == 1)
 		format = GL_RED;
 	else if (nChannel == 3)
@@ -235,11 +232,9 @@ bool TextureFromFile(const char* path, const std::string& directory, unsigned in
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	isSuccess = true;
-	*id = texture;
-
 
 	stbi_image_free(data);
 	Logger::Log(LogType::SUCCESS, "Texture", "Load Image " + fullpath);
-	return true;
+
+	return texture;
 }
