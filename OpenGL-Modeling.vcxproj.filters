@@ -110,5 +110,9 @@
     <None Include="shader.vs" />
     <None Include="light.vs" />
     <None Include="light.fs" />
+    <None Include="grass.vs" />
+    <None Include="grass.fs" />
+    <None Include="framebuffer.vs" />
+    <None Include="framebuffer.fs" />
   </ItemGroup>
 </Project>

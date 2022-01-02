@@ -2,7 +2,7 @@
 #include "Mesh.h"
 
 unsigned TextureFromFile(const char* path, const std::string& directory, bool gamma = false);
-
+unsigned char* LoadImg(const std::string& path, int* width, int* height, int* nChannel);
 
 
 class Model

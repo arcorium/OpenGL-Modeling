@@ -213,12 +213,18 @@ bool Shader::ProcessCache(const std::string& name)
 
 		if (location == -1)
 		{
+			unsigned n = m_false.size();
 			m_false.insert(name);
+			if (n != m_false.size())
+				Logger::Log(LogType::FAILED, m_name, "Failed to register variable : " + name);
 			return false;
 		}
 		Logger::Log(LogType::SUCCESS, m_name, "Register new variable : " + name, location);
 
 		m_cache.insert(std::make_pair(name, location));
+
+
+
 	}
 
 	return true;

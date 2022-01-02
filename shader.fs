@@ -32,6 +32,10 @@ struct DirectionLight
 };
 
 
+// near and far is following the projection matrix near and far plane
+float near = 0.1f;
+float far = 100.0f;
+
 in vec3 Normal;
 in vec2 TexCoord;
 in vec3 ObjectPosition;
@@ -41,6 +45,15 @@ out vec4 FragColor;
 uniform Material material;
 uniform PointingLight light;
 uniform vec3 viewPosition;
+
+float LinearizeDepth(float depth)
+{
+
+	float z = depth * 2 - 1.0f;  // make the depth in range [-1, 1] not [0, 1]
+
+	// Linearize
+	return (near * far* 2.0f) / (far + near - z * (far - near));
+}
 
 void main()
 {
@@ -72,5 +85,6 @@ void main()
 
 	vec3 result = ambient + diffuse + specular;
 
+//	float depth = LinearizeDepth(gl_FragCoord.z) / far;
 	FragColor = vec4(result, 1.0f);
 }

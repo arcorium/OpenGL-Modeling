@@ -204,6 +204,10 @@
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="framebuffer.fs" />
+    <None Include="framebuffer.vs" />
+    <None Include="grass.fs" />
+    <None Include="grass.vs" />
     <None Include="light.fs" />
     <None Include="light.vs" />
     <None Include="shader.fs" />

@@ -117,11 +117,10 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
 		aiFace& face = mesh->mFaces[i];
 
-		assert(face.mNumIndices == 3);
-
-		indices.push_back(face.mIndices[0]);
-		indices.push_back(face.mIndices[1]);
-		indices.push_back(face.mIndices[2]);
+		for (unsigned j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
 	}
 
 	// Material (Texture)
@@ -130,12 +129,11 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 		// Diffuse maps
-
 		std::vector<Texture> diffuseMaps = LoadMaterialTexture(material, aiTextureType_DIFFUSE, "texture_diffuse");
 		// Insert to last index
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-		// Specular maps
 
+		// Specular maps
 		std::vector<Texture> specularMaps = LoadMaterialTexture(material, aiTextureType_SPECULAR, "texture_specular");
 		// Insert to last index
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -176,7 +174,9 @@ std::vector<Texture> Model::LoadMaterialTexture(aiMaterial* material, aiTextureT
 		{
 			if (m_loadedTexture.contains(str.C_Str()))
 			{
-				textures.push_back(m_loadedTexture[str.C_Str()]);
+				Texture temp = m_loadedTexture[str.C_Str()];
+				temp.type = typeName;
+				textures.push_back(temp);
 				skip = true;
 				break;
 			}
@@ -204,7 +204,7 @@ unsigned TextureFromFile(const char* path, const std::string& directory, bool ga
 	std::string fullpath = std::string(directory + "\\" + path);
 
 	int width, height, nChannel;
-	unsigned char* data = stbi_load(fullpath.c_str(), &width, &height, &nChannel, NULL);
+	unsigned char* data = LoadImg(fullpath, &width, &height, &nChannel);
 	if (!data)
 	{
 		Logger::Log(LogType::FAILED, "Texture", "Load Image " + fullpath);
@@ -237,4 +237,11 @@ unsigned TextureFromFile(const char* path, const std::string& directory, bool ga
 	Logger::Log(LogType::SUCCESS, "Texture", "Load Image " + fullpath);
 
 	return texture;
+}
+
+unsigned char* LoadImg(const std::string& path, int* width, int* height, int* nChannel)
+{
+	unsigned char* data = stbi_load(path.c_str(), width, height, nChannel, NULL);
+
+	return data;
 }

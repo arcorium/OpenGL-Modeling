@@ -6,9 +6,9 @@ class Shader
 	unsigned int m_ID;
 	std::string m_name;
 	std::unordered_map<std::string, int> m_cache;
+public:
 	inline static std::set<std::string> m_false;
 
-public:
 	/**
 	 * \brief Shader Initialization
 	 * \param vertexPath Relative path into vertex file

@@ -3,7 +3,7 @@
 
 Camera::Camera(glm::vec3 camPos, const glm::mat4& model, const glm::mat4& projection)
 	:m_model(model), m_projection(projection), m_position(camPos), m_front(glm::vec3{0.0f, 0.0f, -1.0f}), m_right(), m_up(), m_worldUp(glm::vec3{0.0f, 1.0f, 0.0f}),
-		m_sensitivity(SENSITIVITY), m_speed(SPEED), m_yaw(YAW), m_pitch(PITCH), m_zoom(ZOOM)
+		m_sensitivity(SENSITIVITY), m_speed(SPEED), m_yaw(YAW), m_pitch(PITCH), m_zoom(ZOOM), m_velocity(0.0f)
 {
 	Setup();
 }
@@ -16,15 +16,26 @@ void Camera::Setup()
 void Camera::KeyInput(const CameraMovement& cm, float deltaTime)
 {
 	float velocity = deltaTime * m_speed;
-	if (cm == CameraMovement::FORWARD)
-		m_position += m_front * velocity;
-	if (cm == CameraMovement::BACKWARD)
-		m_position -= m_front * velocity;
-	if (cm == CameraMovement::LEFT)
-		m_position -= m_right * velocity;
-	if (cm == CameraMovement::RIGHT)
-		m_position += m_right * velocity;
 
+	if (cm == CameraMovement::FORWARD)
+		m_velocity = m_front * velocity;
+	if (cm == CameraMovement::BACKWARD)
+		m_velocity = -m_front * velocity;
+	if (cm == CameraMovement::LEFT)
+		m_velocity = -m_right * velocity;
+	if (cm == CameraMovement::RIGHT)
+		m_velocity = m_right * velocity;
+	if (cm == CameraMovement::KEYUP)
+	{
+		m_velocity.x = 0.0f;
+		m_velocity.y = 0.0f;
+		m_velocity.z = 0.0f;
+	}
+}
+
+void Camera::Move()
+{
+	m_position += m_velocity;
 }
 
 void Camera::CursorInput(float xOffset, float yOffset)
@@ -64,22 +75,22 @@ void Camera::UpdateCamera()
 	m_up = glm::normalize(glm::cross(m_right, m_front));
 }
 
-glm::vec3 Camera::GetPosition()
+glm::vec3 Camera::GetPosition() const
 {
 	return m_position;
 }
 
-glm::vec3 Camera::GetFront()
+glm::vec3 Camera::GetFront() const
 {
 	return m_front;
 }
 
-glm::mat4 Camera::GetModel()
+glm::mat4 Camera::GetModel() const
 {
 	return m_model;
 }
 
-glm::mat4 Camera::GetProjection()
+glm::mat4 Camera::GetProjection() const
 {
 	return m_projection;
 }
@@ -94,9 +105,9 @@ void Camera::SetProjection(const glm::mat4& proj)
 	m_projection = proj;
 }
 
-glm::mat4 Camera::GetView()
+glm::mat4 Camera::GetView() const
 {
-	return glm::lookAt(m_position, m_front + m_position, m_up);
+	return lookAt(m_position, m_front + m_position, m_up);
 }
 
 const float& Camera::GetZoom() const
